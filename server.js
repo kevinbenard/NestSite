@@ -92,6 +92,8 @@ function InsertDBData(conn,input,device_type) {
          input.hvac_mode,input.ambient_temperature_f,
          input.ambient_temperature_c,input.humidity, curr_time ]);
     } else if (device_type === 'weather') {
+        var relhumidity = input.relative_humidity.substring(0, 
+                                        input.relative_humidity.length - 1);
         conn.query('INSERT INTO weather_data_raw (wjson_data,curr_time) \
                    VALUES ($1,$2)', [JSON.stringify(input), curr_time]);
         conn.query('INSERT INTO weather_thermo_data (curr_time,weather,\
@@ -100,7 +102,7 @@ function InsertDBData(conn,input,device_type) {
             precip_today_metric) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,\
             $9,$10,$11,$12)',
             [curr_time,input.weather,input.temp_f,input.temp_c,
-            input.relative_humdity,input.wind_kph, input.pressure_mb,
+            relhumidity,input.wind_kph, input.pressure_mb,
             input.dewpoint_c,input.dewpoint_f,input.windchill_f,
             input.windchill_c,input.precip_today_metric]);
     }

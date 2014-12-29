@@ -10,6 +10,7 @@ $(function() {
     var overview = {};
     var dataset = [];
     var overviewDataset = [];
+    var weatherDataset = [];
     var options = {
         legend: {
             container: $('#legendcontainer'),
@@ -69,12 +70,43 @@ $(function() {
             mode: "x"
         }
     };
-
+    var weatherOptions = {
+        legend: {
+            //container: $('#legendcontainer'),
+            noColumns: 5
+        },
+        series: {
+            lines: {
+                show:true
+            }
+        },
+        xaxis: {
+            mode: "time",
+            timeformat: "%m/%d/%y %H:%M",
+            tickLength: 5
+        },
+        xaxes: [ ],
+        yaxes: [ {
+            min: -40,
+            max: 40,
+            position: 'left',
+            tickFormatter: yAxisFormatter
+        }, {
+            min: 20,
+            max: 100,
+            position: 'right',
+            tickFormatter: yAxisHumidity,
+            autoscaleMargin: 0.1
+        } ],
+        grid: {
+            markings: weekendAreas
+        }
+    };
     $(document).ready(function() {
         $.ajax({
             type: "POST",
             url: '/',
-            data: '',
+            data: {type: 'thermo'},
             success: function(data) {
                 //console.log(JSON.parse(data));
                 var out = JSON.parse(data);
@@ -84,16 +116,34 @@ $(function() {
                 targetTempHigh = out.targetTempHigh;
                 humidity = out.humidity;
 
-                setNewData();
+                setThermoData();
                 plot = $.plot("#placeholder", dataset, options);
                 overview = $.plot("#overview", overviewDataset, overviewOptions);
             },
             dataType: 'text'
         });
+        $.ajax({
+            type: "POST",
+            url: '/',
+            data: {type: 'weather'},
+            success: function(data) {
+                //console.log(JSON.parse(data));
+                var out = JSON.parse(data);
+                weatherTemp = out.weatherTemp;
+                //curTemp = out.currentTemp;
+                relHumidity = out.relHumidity;
+
+                setWeatherData();
+                plot = $.plot("#weatherchart", weatherDataset, weatherOptions);
+                //overview = $.plot("#overview", overviewDataset, overviewOptions);
+            },
+            dataType: 'text'
+        });
+
 
     });
 
-    function setNewData() {
+    function setThermoData() {
         dataset = [
             { id: "temp", label: "Temperature", data: curTemp, lines: { show: true }, color: "rgb(50,255,50)" },
             //{ id: "temp", label: "Temperature", data: curTemp, lines: { show: true }, color: "rgb(50,255,50)", threshold: { below: 21.0, color: "rgb(0,0,255)"} },
@@ -108,25 +158,15 @@ $(function() {
         ];
     }
 
+    function setWeatherData() {
+        weatherDataset = [
+            { id: "indoorTemperature", label: "Indoor Temperature", data: curTemp, lines: { show: true }, color: "rgb(255,50,50)" },
+            { id: "outsideTemperature", label: "Outside Temperature", data: weatherTemp, lines: { show: true }, color: "rgb(50,255,50)" },
+            { id: "outsideHumidity", label: "Outside Humidity", data: relHumidity, lines: { show: true }, color: "rgb(50,50,255)", yaxis:2 }
+        ];
+    }
+
     function fanOnAreas(axes) {
-        var markings = [],
-        d = new Date(axes.xaxis.min);
-        // go to the first Saturday
-        d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
-        d.setUTCSeconds(0);
-        d.setUTCMinutes(0);
-        d.setUTCHours(0);
-
-        var i = d.getTime();
-
-        // when we don't set yaxis, the rectangle automatically
-        // extends to infinity upwards and downwards
-        do {
-            markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 } });
-            i += 7 * 24 * 60 * 60 * 1000;
-        } while (i < axes.xaxis.max);
-
-        return markings;
     }
 
     function weekendAreas(axes) {
