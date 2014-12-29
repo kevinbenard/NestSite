@@ -12,7 +12,8 @@ $(function() {
     var overviewDataset = [];
     var options = {
         legend: {
-            container: $('#legendcontainer')
+            container: $('#legendcontainer'),
+            noColumns: 5
         },
         series: {
             lines: {
