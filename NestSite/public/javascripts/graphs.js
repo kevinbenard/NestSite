@@ -13,7 +13,7 @@ $(function() {
     var weatherDataset = [];
     var options = {
         legend: {
-            container: $('#legendcontainer'),
+            //container: $('#legendcontainer'),
             noColumns: 5
         },
         series: {
