@@ -85,7 +85,9 @@ router.post('/', function(req,res) {
         query.on('end', function() { 
             client.end();
 
-            res.send(JSON.stringify(DBData));
+            if (DBData) {
+                res.send(JSON.stringify(DBData));
+            }
 
             DBData = {
                 targetTemp: [],
