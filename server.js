@@ -17,8 +17,6 @@ var weather_key = process.env.WEATHER_KEY;
 var nest_auth = process.env.NEST_AUTH;
 var timeInterval = 300000; // 5 mins in milliseconds
 //var timeInterval = 30000; // 30 seconds in milliseconds
-var temps = [];
-var data_output;
 
 function GetDataFromNest(DBCon) {
     //https.get(nestConURL, function(res) {
@@ -66,9 +64,9 @@ function InsertDBData(conn,input,device_type) {
     var curr_time = new Date();
     if (device_type === 'thermostats') {
         var last_connection = new Date(input.last_connection);
+        var fan_timer_timeout = new Date(input.fan_timer_timeout);
         conn.query('INSERT INTO nest_data_raw (json_data,curr_time) VALUES ($1,$2)', 
             [JSON.stringify(input), curr_time]);
-        // TODO: Find proper fan_timer_active value
         conn.query('INSERT INTO nest_thermo_data (device_id, structure_id, \
          name, name_long, last_connect, is_online, can_cool, can_heat,\
          is_using_emergency_heat, has_fan, fan_timer_active, fan_timer_timeout,\
@@ -83,7 +81,7 @@ function InsertDBData(conn,input,device_type) {
          [input.device_id,input.structure_id,input.name,input.name_long,
          last_connection, input.is_online,input.can_cool,input.can_heat,
          input.is_using_emergency_heat,input.has_fan,input.fan_timer_active,
-         null/*fan_timer_active*/,input.has_leaf,input.temperature_scale,
+         fan_timer_timeout,input.has_leaf,input.temperature_scale,
          input.target_temperature_f,input.target_temperature_c,
          input.target_temperature_high_f,input.target_temperature_high_c,
          input.target_temperature_low_f,input.target_temperature_low_c,
@@ -114,6 +112,7 @@ function GetWeatherData(DBCon) {
         if (res.statusCode != '200') {
             console.log('Error retrieving weather!: Code: ' + res.statusCode);
         }
+        console.log(res.statusCode);
         res.on('data', function(data) {
             var out = ExtractJSONFromNest(data,'weather');
             if (out) {
@@ -147,11 +146,4 @@ setInterval(function() {
         done();
     });
     //console.log(new Date() + " Executing loop!");
-    clearVars();
 }, timeInterval ); // 5 mins
-
-function clearVars() {
-    output = '';
-    data_output = '';
-    temps = [];
-}

@@ -5,20 +5,9 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res) {
-    var CurrentTemp = '\nvar curTemp = [];'
-    var TargetTempHigh = '\nvar targetTempHigh = [];';
-    var TargetTempLow = 'var targetTempLow = [];';
-    var Humidity = 'var humidity = [];';
-    var TargetTemp= 'var targetTemp = [];';
-    var RelHumidity = 'var relHumidity = [];';
-    var WeatherTemp = 'var weatherTemp = [];';
-    var WindchillTemp = 'var windchillTemp = [];';
-
-    scripts = CurrentTemp + TargetTempHigh + TargetTempLow + Humidity + 
-                TargetTemp + WeatherTemp + WindchillTemp;
     res.render('index', { 
         title: 'Nest Graphs', 
-        scripts: scripts
+        scripts: '' /*scripts*/
     })
 });
 
