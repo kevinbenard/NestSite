@@ -7,7 +7,6 @@ var router = express.Router();
 router.get('/', function(req, res) {
     res.render('index', { 
         title: 'Nest Graphs', 
-        scripts: '' /*scripts*/
     })
 });
 
