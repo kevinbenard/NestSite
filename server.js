@@ -18,7 +18,7 @@ function GetDataFromNest(DBCon) {
             return;
         }
         res.on('data', function(data) {
-            var out = ExtractJSONFromNest(data, 'thermostats');
+            var out = ExtractJSON(data, 'thermostats');
             if (out) {
                 InsertDBData(DBCon, out, 'thermostats');
             } else {
@@ -30,7 +30,7 @@ function GetDataFromNest(DBCon) {
     });
 }
 
-function ExtractJSONFromNest(input,device_type) {
+function ExtractJSON(input,input_type) {
     if(input) {
         var data = JSON.parse(input);
     } else {
@@ -38,11 +38,11 @@ function ExtractJSONFromNest(input,device_type) {
     }
 
     if (data) {
-        if (device_type === 'thermostats') {
+        if (input_type === 'thermostats') {
             var out = data.devices.thermostats[thermoID];
-        } else if (device_type === 'smoke_co_alarms') {
+        } else if (input_type === 'smoke_co_alarms') {
             var out = data.devices.smoke_co_alarms[0/*alarm_id*/];
-        } else if (device_type === 'weather') {
+        } else if (input_type === 'weather') {
             var out = data.current_observation;
         } else {
             console.log('Error! Incorrect device type!');
@@ -113,7 +113,7 @@ function GetWeatherData(DBCon) {
             return;
         }
         res.on('data', function(data) {
-            var out = ExtractJSONFromNest(data,'weather');
+            var out = ExtractJSON(data,'weather');
             if (out) {
                 InsertDBData(DBCon, out, 'weather');
             } else {
