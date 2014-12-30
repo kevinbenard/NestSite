@@ -14,7 +14,8 @@ router.get('/', function(req, res) {
     var WeatherTemp = 'var weatherTemp = [];';
     var WindchillTemp = 'var windchillTemp = [];';
 
-    scripts = CurrentTemp + TargetTempHigh + TargetTempLow + Humidity + TargetTemp;
+    scripts = CurrentTemp + TargetTempHigh + TargetTempLow + Humidity + 
+                TargetTemp + WeatherTemp + WindchillTemp;
     res.render('index', { 
         title: 'Nest Graphs', 
         scripts: scripts
