@@ -12,14 +12,12 @@ var timeInterval = 300000; // 5 mins in milliseconds
 //var timeInterval = 30000; // 30 seconds in milliseconds
 
 function GetDataFromNest(DBCon) {
-    //https.get(nestConURL, function(res) {
     https.get('https://developer-api.nest.com/?auth=' + nest_auth, function(res) {
         if (res.statusCode != '200') {
             console.log('Error retrieving data!: Code: ' + res.statusCode);
             return;
         }
         res.on('data', function(data) {
-            //console.log('In GetData result');
             var out = ExtractJSONFromNest(data, 'thermostats');
             if (out) {
                 InsertDBData(DBCon, out, 'thermostats');
@@ -33,21 +31,17 @@ function GetDataFromNest(DBCon) {
 }
 
 function ExtractJSONFromNest(input,device_type) {
-    //console.log('ThermoID: ' + thermoID);
     if(input) {
         var data = JSON.parse(input);
     } else {
         return null;
     }
-    //console.log('In Extract: ' + JSON.stringify(data));
 
     if (data) {
         if (device_type === 'thermostats') {
             var out = data.devices.thermostats[thermoID];
-            //console.log(data.can_heat);
         } else if (device_type === 'smoke_co_alarms') {
             var out = data.devices.smoke_co_alarms[0/*alarm_id*/];
-            //console.log();
         } else if (device_type === 'weather') {
             var out = data.current_observation;
         } else {
@@ -150,5 +144,4 @@ pg.connect(conString, function(err, client, done) {
 
         console.log(new Date() + " Executing loop!");
     }, timeInterval ); // 5 mins
-    //done();
 });
