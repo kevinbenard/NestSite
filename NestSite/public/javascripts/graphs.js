@@ -164,11 +164,11 @@ $(function() {
 
     function setThermoData() {
         dataset = [
-            { id: "temp", label: "Temperature: 0", data: curTemp, lines: { show: true }, color: "rgb(50,255,50)" },
-            { id: "target_temp", label: "Target Temperature: 0", data: targetTemp, lines: { show: true, fill: 0.4 }, color: "rgb(255,50,0)", fillBetween: "temp"},
+            { id: "temp", label: "Temperature: 0.00", data: curTemp, lines: { show: true }, color: "rgb(50,255,50)" },
+            { id: "target_temp", label: "Target Temperature: 0.00", data: targetTemp, lines: { show: true, fill: 0.4 }, color: "rgb(255,50,0)", fillBetween: "temp"},
+            { id: "humidity", label: "Humidity: 0.00", data: humidity, lines: {show:true, lineWidth: 0.8, fill: false}, color: "rgb(50,50,255)", yaxis: 2},
             { id: "target_low", data: targetTempLow, lines: {show:true, lineWidth: 0.5, fill: false}, color: "rgb(255,255,50)"},
             { id: "target_high", label: "Target Temperature Range", data: targetTempHigh, lines: {show:true, lineWidth: 0.5, fill: 0.1}, color: "rgb(255,255,50)", fillBetween:"target_low"},
-            { id: "humidity", label: "Humidity", data: humidity, lines: {show:true, lineWidth: 0.8, fill: false}, color: "rgb(50,50,255)", yaxis: 2},
         ];
         overviewDataset = [
             targetTempHigh, targetTempLow, curTemp, 
@@ -186,14 +186,17 @@ $(function() {
     }
 
     function hasLeafAreas(axes) {
+        //var iter = 0;
         //d = new Date(axes.xaxis.min);
         //var i = d.getTime();
 
-        ////do {
-            //markings.push({ axis: { from: d, to: d + 30000},color: "rgb(152,251,152)" });
-            //i += 5;
-            //console.log(axes.xaxis);
-        ////} while (i < axes.xaxis.max);
+        //do {
+            //if (curTemp[iter][1] < 19) {
+                //markings.push({ xaxis: { from: d, to: d + 3000},color: "rgb(152,251,152)" });
+            //}
+            //d += 3000;
+            //iter++;
+        //} while (iter < curTemp.length);
 
         //return markings;
     }
@@ -264,7 +267,7 @@ $(function() {
             }
 
             if(series.label && i < 3) {
-                legends.eq(i).text(series.label.replace(/:+.*/, ': ' + y.toFixed(2)));
+                legends.eq(i).text(series.label.replace(/:+.*/, ': ' + y.toFixed(1)));
             } 
         }
     }

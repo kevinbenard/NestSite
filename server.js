@@ -23,6 +23,7 @@ function GetDataFromNest(DBCon) {
     https.get('https://developer-api.nest.com/?auth=' + nest_auth, function(res) {
         if (res.statusCode != '200') {
             console.log('Error retrieving data!: Code: ' + res.statusCode);
+            return;
         }
         res.on('data', function(data) {
             //console.log('In GetData result');
@@ -40,7 +41,11 @@ function GetDataFromNest(DBCon) {
 
 function ExtractJSONFromNest(input,device_type) {
     //console.log('ThermoID: ' + thermoID);
-    var data = JSON.parse(input);
+    if(input) {
+        var data = JSON.parse(input);
+    } else {
+        return null;
+    }
     //console.log('In Extract: ' + JSON.stringify(data));
 
     if (data) {
@@ -62,9 +67,14 @@ function ExtractJSONFromNest(input,device_type) {
 
 function InsertDBData(conn,input,device_type) {
     var curr_time = new Date();
+
+    if (!conn || !input) { return; }
     if (device_type === 'thermostats') {
         var last_connection = new Date(input.last_connection);
-        var fan_timer_timeout = new Date(input.fan_timer_timeout);
+        var fan_timer_timeout = null;
+        if (input.fan_timer_timeout) {
+            fan_timer_timeout = new Date(input.fan_timer_timeout);
+        }
         conn.query('INSERT INTO nest_data_raw (json_data,curr_time) VALUES ($1,$2)', 
             [JSON.stringify(input), curr_time]);
         conn.query('INSERT INTO nest_thermo_data (device_id, structure_id, \
@@ -103,6 +113,8 @@ function InsertDBData(conn,input,device_type) {
             relhumidity,input.wind_kph, input.pressure_mb,
             input.dewpoint_c,input.dewpoint_f,input.windchill_f,
             input.windchill_c,input.precip_today_metric]);
+    } else {
+        return;
     }
     conn.query('COMMIT');
 }
@@ -111,8 +123,8 @@ function GetWeatherData(DBCon) {
     http.get('http://api.wunderground.com/api/' + weather_key + '/geolookup/conditions/q/Canada/Saskatoon.json', function(res) {
         if (res.statusCode != '200') {
             console.log('Error retrieving weather!: Code: ' + res.statusCode);
+            return;
         }
-        console.log(res.statusCode);
         res.on('data', function(data) {
             var out = ExtractJSONFromNest(data,'weather');
             if (out) {
@@ -126,24 +138,24 @@ function GetWeatherData(DBCon) {
     });
 }
 
-console.log('Starting...\n');
-setInterval(function() {
-    // get a pg client from the connection pool
-    pg.connect(conString, function(err, client, done) {
-        var handleError = function(err) {
-            // no error occurred, continue with the request
-            if(!err) return false;
+// get a pg client from the connection pool
+pg.connect(conString, function(err, client, done) {
+    var handleError = function(err) {
+        // no error occurred, continue with the request
+        if(!err) return false;
 
-            done(client);
-            res.writeHead(500, {'content-type': 'text/plain'});
-            res.end('An error occurred: ' + err);
-            return true;
-        };
+        done(client);
+        res.writeHead(500, {'content-type': 'text/plain'});
+        res.end('An error occurred: ' + err);
+        return true;
+    };
 
+    console.log('Starting...\n');
+    setInterval(function() {
         GetDataFromNest(client);
         GetWeatherData(client);
 
-        done();
-    });
-    //console.log(new Date() + " Executing loop!");
-}, timeInterval ); // 5 mins
+        console.log(new Date() + " Executing loop!");
+    }, timeInterval ); // 5 mins
+    //done();
+});
