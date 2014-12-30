@@ -6,7 +6,11 @@ var router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res) {
     res.render('index', { 
+<<<<<<< HEAD
         title: 'Nest Graphs'
+=======
+        title: 'Nest Graphs', 
+>>>>>>> ab636609995aa5dceec768f19a0a70ca17acf7d6
     })
 });
 
