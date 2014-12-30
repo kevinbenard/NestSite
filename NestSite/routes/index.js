@@ -12,6 +12,7 @@ router.get('/', function(req, res) {
     var TargetTemp= 'var targetTemp = [];';
     var RelHumidity = 'var relHumidity = [];';
     var WeatherTemp = 'var weatherTemp = [];';
+    var WindchillTemp = 'var windchillTemp = [];';
 
     scripts = CurrentTemp + TargetTempHigh + TargetTempLow + Humidity + TargetTemp;
     res.render('index', { 
@@ -65,6 +66,7 @@ router.post('/', function(req,res) {
             } else if (validator.equals(reqType, 'weather')) {
                 var DBData = {
                     weatherTemp: [],
+                    windchillTemp: [],
                     relHumidity: []
                 };
                 var query = client.query('SELECT *,curr_time - interval \'6 hour\' as curr_time2 FROM weather_thermo_data order by curr_time');
@@ -72,6 +74,7 @@ router.post('/', function(req,res) {
                     var t = new Date(row['curr_time2']).getTime();
                     DBData.weatherTemp.push([t,row['temp_c']]);
                     DBData.relHumidity.push([t,row['humidity']]);
+                    DBData.windchillTemp.push([t,row['windchill_c']]);
                 });
             } else {
                 console.log('INCORRECT POST DATA!');

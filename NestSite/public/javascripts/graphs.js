@@ -8,6 +8,7 @@ $(function() {
     }
     var plot = {};
     var overview = {};
+    var weatherPlot = {};
     var dataset = [];
     var overviewDataset = [];
     var weatherDataset = [];
@@ -132,9 +133,10 @@ $(function() {
                 weatherTemp = out.weatherTemp;
                 //curTemp = out.currentTemp;
                 relHumidity = out.relHumidity;
+                windchillTemp = out.windchillTemp;
 
                 setWeatherData();
-                plot = $.plot("#weatherchart", weatherDataset, weatherOptions);
+                weatherPlot = $.plot("#weatherchart", weatherDataset, weatherOptions);
                 //overview = $.plot("#overview", overviewDataset, overviewOptions);
             },
             dataType: 'text'
@@ -162,6 +164,7 @@ $(function() {
         weatherDataset = [
             { id: "indoorTemperature", label: "Indoor Temperature", data: curTemp, lines: { show: true }, color: "rgb(255,50,50)" },
             { id: "outsideTemperature", label: "Outside Temperature", data: weatherTemp, lines: { show: true }, color: "rgb(50,255,50)" },
+            { id: "outsideTemperature", label: "Windchill", data: windchillTemp, lines: { show: true }, color: "rgb(255,255,50)" },
             { id: "outsideHumidity", label: "Outside Humidity", data: relHumidity, lines: { show: true }, color: "rgb(50,50,255)", yaxis:2 }
         ];
     }
