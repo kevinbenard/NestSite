@@ -79,13 +79,7 @@ router.post('/', function(req,res) {
                 res.send(JSON.stringify(DBData));
             }
 
-            DBData = {
-                targetTemp: [],
-                currentTemp: [],
-                targetTempLow: [],
-                targetTempHigh: [],
-                humidity: []
-            };
+            DBData = {};
         });
     });
 });
