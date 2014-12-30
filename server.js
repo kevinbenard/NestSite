@@ -1,11 +1,4 @@
-var express = require('express'),
-    session = require('express-session'),
-    cookieParser = require('cookie-parser'),
-    app = express(),
-    passport = require('passport'),
-    bodyParser = require('body-parser'),
-    NestStrategy = require('passport-nest').Strategy;
-    http = require('http');
+var http = require('http');
     https = require('follow-redirects').https;
     pg = require('pg');
     fs = require('fs');
