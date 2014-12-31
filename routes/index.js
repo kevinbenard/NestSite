@@ -7,7 +7,7 @@ var router = express.Router();
 router.get('/', function(req, res) {
     res.render('index', { 
         title: 'Nest Graphs'
-    })
+    });
 });
 
 router.post('/', function(req,res) {
@@ -31,11 +31,13 @@ router.post('/', function(req,res) {
             return true;
         };
 
+        var query = {};
+        var DBData = {};
         if (req.body.hasOwnProperty('type')) {
             var reqType = req.body.type;
 
             if (validator.equals(reqType, 'thermo')) {
-                var DBData = {
+                DBData = {
                     targetTemp: [],
                     currentTemp: [],
                     targetTempLow: [],
@@ -43,27 +45,27 @@ router.post('/', function(req,res) {
                     humidity: []
                 };
 
-                var query = client.query('SELECT *,curr_time - interval \'6 hour\' as curr_time2 FROM nest_thermo_data order by curr_time');
+                query = client.query('SELECT *,curr_time - interval \'6 hour\' as curr_time2 FROM nest_thermo_data order by curr_time');
                 query.on('row', function(row) {
-                    var t = new Date(row['curr_time2']).getTime();
-                    DBData.targetTemp.push([t,row['target_temperature_c']]);
-                    DBData.targetTempLow.push([t,row['target_temperature_low_c']]);
-                    DBData.targetTempHigh.push([t,row['target_temperature_high_c']]);
-                    DBData.currentTemp.push([t,row['ambient_temperature_c']]);
-                    DBData.humidity.push([t,row['humidity']]);
+                    var t = new Date(row.curr_time2).getTime();
+                    DBData.targetTemp.push([t,row.target_temperature_c]);
+                    DBData.targetTempLow.push([t,row.target_temperature_low_c]);
+                    DBData.targetTempHigh.push([t,row.target_temperature_high_c]);
+                    DBData.currentTemp.push([t,row.ambient_temperature_c]);
+                    DBData.humidity.push([t,row.humidity]);
                 });
             } else if (validator.equals(reqType, 'weather')) {
-                var DBData = {
+                DBData = {
                     weatherTemp: [],
                     windchillTemp: [],
                     relHumidity: []
                 };
-                var query = client.query('SELECT *,curr_time - interval \'6 hour\' as curr_time2 FROM weather_thermo_data order by curr_time');
+                query = client.query('SELECT *,curr_time - interval \'6 hour\' as curr_time2 FROM weather_thermo_data order by curr_time');
                 query.on('row', function(row) {
-                    var t = new Date(row['curr_time2']).getTime();
-                    DBData.weatherTemp.push([t,row['temp_c']]);
-                    DBData.relHumidity.push([t,row['humidity']]);
-                    DBData.windchillTemp.push([t,row['windchill_c']]);
+                    var t = new Date(row.curr_time2).getTime();
+                    DBData.weatherTemp.push([t,row.temp_c]);
+                    DBData.relHumidity.push([t,row.humidity]);
+                    DBData.windchillTemp.push([t,row.windchill_c]);
                 });
             } else {
                 console.log('INCORRECT POST DATA!');

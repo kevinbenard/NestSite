@@ -1,11 +1,11 @@
 $(function() {
     var yAxisFormatter = function(val, axis) {
         return val + '° C';
-    }
+    };
 
     var yAxisHumidity = function(val, axis) {
         return val.toFixed(axis.tickDecimals) + '%';
-    }
+    };
     var markings = [];
     var plot = {};
     var overview = {};
@@ -204,7 +204,7 @@ $(function() {
     function weekendAreas(axes) {
         d = new Date(axes.xaxis.min);
         // go to the first Saturday
-        d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
+        d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7));
         d.setUTCSeconds(0);
         d.setUTCMinutes(0);
         d.setUTCHours(0);
@@ -258,9 +258,9 @@ $(function() {
             var p1 = series.data[j - 1];
             var p2 = series.data[j];
 
-            if (p1 == null) {
+            if (p1 === null) {
                 y = parseFloat(p2[1]);
-            } else if (p2 == null) {
+            } else if (p2 === null) {
                 y = parseFloat(p1[1]);
             } else {
                 y = parseFloat(p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]));
