@@ -5,7 +5,6 @@ var http = require('http');
 
 var conString = process.env.CON_STRING;
 var thermoID = process.env.THERMO_ID;
-var nestConURL = process.env.NEST_URL;
 var weather_key = process.env.WEATHER_KEY;
 var nest_auth = process.env.NEST_AUTH;
 var timeInterval = 300000; // 5 mins in milliseconds
