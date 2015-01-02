@@ -55,7 +55,9 @@ function ExtractJSON(input,input_type) {
 }
 
 function InsertDBData(conn,input,device_type) {
+    var hasError = false;
     var curr_time = new Date();
+    // TODO: Refactor query code to better handle errors
 
     if (!conn || !input) { return; }
     if (device_type === 'thermostats') {
@@ -66,6 +68,10 @@ function InsertDBData(conn,input,device_type) {
         }
         conn.query('INSERT INTO nest_data_raw (json_data,curr_time) VALUES ($1,$2)', 
             [JSON.stringify(input), curr_time]);
+        conn.on('error', function(err) {
+            hasError = true;
+            doError(err);
+        });
         conn.query('INSERT INTO nest_thermo_data (device_id, structure_id, ' +
          'name, name_long, last_connect, is_online, can_cool, can_heat,' +
          'is_using_emergency_heat, has_fan, fan_timer_active, fan_timer_timeout,' +
@@ -88,6 +94,10 @@ function InsertDBData(conn,input,device_type) {
          input.away_temperature_low_f, input.away_temperature_low_c,
          input.hvac_mode,input.ambient_temperature_f,
          input.ambient_temperature_c,input.humidity, curr_time ]);
+        conn.on('error', function(err) {
+            hasError = true;
+            doError(err);
+        });
     } else if (device_type === 'weather') {
         var relhumidity = input.relative_humidity.substring(0, 
                                         input.relative_humidity.length - 1);
@@ -102,6 +112,10 @@ function InsertDBData(conn,input,device_type) {
         if (windchill_f === 'NA') { windchill_f = input.temp_f; }
         conn.query('INSERT INTO weather_data_raw (wjson_data,curr_time)' +
                    'VALUES ($1,$2)', [JSON.stringify(input), curr_time]);
+        conn.on('error', function(err) {
+            hasError = true;
+            doError(err);
+        });
         conn.query('INSERT INTO weather_thermo_data (curr_time,weather,' +
             'temp_f, temp_c, humidity, wind_kph, pressure_mb,' +
             'dewpoint_c,dewpoint_f,windchill_f,windchill_c,' +
@@ -111,7 +125,14 @@ function InsertDBData(conn,input,device_type) {
             relhumidity,input.wind_kph, input.pressure_mb,
             dewpoint_c,dewpoint_f,windchill_f,
             windchill_c,input.precip_today_metric]);
+        conn.on('error', function(err) {
+            hasError = true;
+            doError(err);
+        });
     } else {
+        return;
+    }
+    if (!hasError) {
         return;
     }
     conn.query('COMMIT');
@@ -139,7 +160,7 @@ function GetWeatherData(DBCon) {
 }
 
 function doError(err) {
-
+    console.log(JSON.stringify(err));
 }
 
 // get a pg client from the connection pool
