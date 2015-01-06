@@ -1,20 +1,21 @@
-var http = require('http');
+var http = require('follow-redirects').http;
     https = require('follow-redirects').https;
     pg = require('pg');
     fs = require('fs');
     validator = require('validator');
 
+var outLog = 'nest.log';
 var conString = process.env.CON_STRING;
 var thermoID = process.env.THERMO_ID;
 var weather_key = process.env.WEATHER_KEY;
 var nest_auth = process.env.NEST_AUTH;
-var timeInterval = 300000; // 5 mins in milliseconds
+var timeInterval = 900000; // 15 mins in milliseconds
 //var timeInterval = 30000; // 30 seconds in milliseconds
 
 function GetDataFromNest(DBCon) {
     https.get('https://developer-api.nest.com/?auth=' + nest_auth, function(res) {
         if (res.statusCode != '200') {
-            console.log('Error retrieving data!: Code: ' + res.statusCode);
+            console.error('Error retrieving data!: Code: ' + res.statusCode);
             return;
         }
         res.on('data', function(data) {
@@ -22,11 +23,11 @@ function GetDataFromNest(DBCon) {
             if (out) {
                 InsertDBData(DBCon, out, 'thermostats');
             } else {
-                console.log('Parse error on JSON extraction');
+                console.error('Parse error on JSON extraction');
             }
         });
     }).on('error', function(error) {
-        console.log('ERROR: \n' + error);
+        console.error('ERROR: \n' + error);
     });
 }
 
@@ -47,7 +48,7 @@ function ExtractJSON(input,input_type) {
         } else if (input_type === 'weather') {
             out = data.current_observation;
         } else {
-            console.log('Error! Incorrect device type!');
+            console.error('Error! Incorrect device type!');
         }
     }
 
@@ -59,18 +60,23 @@ function InsertDBData(conn,input,device_type) {
     var curr_time = new Date();
     // TODO: Refactor query code to better handle errors
 
-    if (!conn || !input) { return; }
+    if (!conn || !input) { 
+        console.error('DATABASE CONNECTION LOST\n'); 
+        return; 
+    }
     if (device_type === 'thermostats') {
         var last_connection = new Date(input.last_connection);
         var fan_timer_timeout = null;
         if (input.fan_timer_timeout) {
             fan_timer_timeout = new Date(input.fan_timer_timeout);
         }
-        conn.query('INSERT INTO nest_data_raw (json_data,curr_time) VALUES ($1,$2)', 
-            [JSON.stringify(input), curr_time]);
-        conn.on('error', function(err) {
-            hasError = true;
-            doError(err);
+        conn.query('INSERT INTO nest_data_raw (json_data,curr_time) ' +
+                   'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
+        function(err, result) { 
+            if(err) {
+                hasError = true;
+                doError(err);
+            }
         });
         conn.query('INSERT INTO nest_thermo_data (device_id, structure_id, ' +
          'name, name_long, last_connect, is_online, can_cool, can_heat,' +
@@ -93,11 +99,13 @@ function InsertDBData(conn,input,device_type) {
          input.away_temperature_high_f,input.away_temperature_high_c,
          input.away_temperature_low_f, input.away_temperature_low_c,
          input.hvac_mode,input.ambient_temperature_f,
-         input.ambient_temperature_c,input.humidity, curr_time ]);
-        conn.on('error', function(err) {
-            hasError = true;
-            doError(err);
-        });
+         input.ambient_temperature_c,input.humidity, curr_time ], 
+         function(err, result) {
+             if(err) {
+                 hasError = true;
+                 doError(err);
+             }
+         });
     } else if (device_type === 'weather') {
         var relhumidity = input.relative_humidity.substring(0, 
                                         input.relative_humidity.length - 1);
@@ -111,10 +119,12 @@ function InsertDBData(conn,input,device_type) {
         if (windchill_c === 'NA') { windchill_c = input.temp_c; }
         if (windchill_f === 'NA') { windchill_f = input.temp_f; }
         conn.query('INSERT INTO weather_data_raw (wjson_data,curr_time)' +
-                   'VALUES ($1,$2)', [JSON.stringify(input), curr_time]);
-        conn.on('error', function(err) {
-            hasError = true;
-            doError(err);
+                   'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
+        function(err, result) {
+            if (err) {
+                hasError = true;
+                doError(err);
+            }
         });
         conn.query('INSERT INTO weather_thermo_data (curr_time,weather,' +
             'temp_f, temp_c, humidity, wind_kph, pressure_mb,' +
@@ -124,11 +134,12 @@ function InsertDBData(conn,input,device_type) {
             [curr_time,input.weather,input.temp_f,input.temp_c,
             relhumidity,input.wind_kph, input.pressure_mb,
             dewpoint_c,dewpoint_f,windchill_f,
-            windchill_c,input.precip_today_metric]);
-        conn.on('error', function(err) {
-            hasError = true;
-            doError(err);
-        });
+            windchill_c,input.precip_today_metric], function(err,result) {
+                if(err) {
+                    hasError = true;
+                    doError(err);
+                }
+            });
     } else {
         return;
     }
@@ -141,7 +152,7 @@ function InsertDBData(conn,input,device_type) {
 function GetWeatherData(DBCon) {
     http.get('http://api.wunderground.com/api/' + weather_key + '/geolookup/conditions/q/Canada/Saskatoon.json', function(res) {
         if (res.statusCode != '200') {
-            console.log('Error retrieving weather!: Code: ' + res.statusCode);
+            console.error('Error retrieving weather!: Code: ' + res.statusCode);
             return;
         }
         res.on('data', function(data) {
@@ -150,20 +161,30 @@ function GetWeatherData(DBCon) {
                 if (out) {
                     InsertDBData(DBCon, out, 'weather');
                 } else {
-                    console.log('Parse error on JSON extraction');
+                    console.error('Parse error on JSON extraction');
                 }
             }
         });
     }).on('error', function(error) {
-        console.log('ERROR: \n' + error);
+        console.error('ERROR: \n' + error);
     });
 }
 
 function doError(err) {
-    console.log(JSON.stringify(err));
+    console.error('[' + new Date() + '] ERROR: ' + JSON.stringify(err));
 }
 
-// get a pg client from the connection pool
+function doSetup() {
+    process.on('uncaughtException', function(e) {
+        console.error('UNCAUGHT EXCEPTION');
+        console.error(e.stack);
+        console.error(e);
+        process.exit(1);
+    });
+}
+
+// START
+doSetup();
 pg.connect(conString, function(err, client, done) {
     var handleError = function(err) {
         // no error occurred, continue with the request
@@ -174,12 +195,16 @@ pg.connect(conString, function(err, client, done) {
         res.end('An error occurred: ' + err);
         return true;
     };
+    client.setMaxListeners(20);
 
     console.log('Starting...\n');
     setInterval(function() {
         GetDataFromNest(client);
         GetWeatherData(client);
 
-        console.log(new Date() + " Querying data!");
+        console.log('[' + new Date() + '] Executed!');
+
+        client.removeAllListeners('error');
+        //done();
     }, timeInterval ); // 5 mins
 });
