@@ -4,7 +4,6 @@ var http = require('follow-redirects').http;
     fs = require('fs');
     validator = require('validator');
 
-var outLog = 'nest.log';
 var conString = process.env.CON_STRING;
 var thermoID = process.env.THERMO_ID;
 var weather_key = process.env.WEATHER_KEY;
@@ -56,7 +55,6 @@ function ExtractJSON(input,input_type) {
 }
 
 function InsertDBData(conn,input,device_type) {
-    var hasError = false;
     var curr_time = new Date();
     // TODO: Refactor query code to better handle errors
 
@@ -74,7 +72,6 @@ function InsertDBData(conn,input,device_type) {
                    'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
         function(err, result) { 
             if(err) {
-                hasError = true;
                 doError(err);
             }
         });
@@ -102,7 +99,6 @@ function InsertDBData(conn,input,device_type) {
          input.ambient_temperature_c,input.humidity, curr_time ], 
          function(err, result) {
              if(err) {
-                 hasError = true;
                  doError(err);
              }
          });
@@ -122,7 +118,6 @@ function InsertDBData(conn,input,device_type) {
                    'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
         function(err, result) {
             if (err) {
-                hasError = true;
                 doError(err);
             }
         });
@@ -136,17 +131,12 @@ function InsertDBData(conn,input,device_type) {
             dewpoint_c,dewpoint_f,windchill_f,
             windchill_c,input.precip_today_metric], function(err,result) {
                 if(err) {
-                    hasError = true;
                     doError(err);
                 }
             });
     } else {
         return;
     }
-    if (!hasError) {
-        return;
-    }
-    conn.query('COMMIT');
 }
 
 function GetWeatherData(DBCon) {
@@ -205,6 +195,5 @@ pg.connect(conString, function(err, client, done) {
         console.log('[' + new Date() + '] Executed!');
 
         client.removeAllListeners('error');
-        //done();
     }, timeInterval ); // 5 mins
 });
