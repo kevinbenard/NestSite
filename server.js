@@ -14,7 +14,8 @@ var timeInterval = 900000; // 15 mins in milliseconds
 function GetDataFromNest(DBCon) {
     https.get('https://developer-api.nest.com/?auth=' + nest_auth, function(res) {
         if (res.statusCode != '200') {
-            console.error('Error retrieving data!: Code: ' + res.statusCode);
+            console.error('[' + new Date() + '] Error retrieving data!: Code: ' + 
+                          res.statusCode);
             return;
         }
         res.on('data', function(data) {
@@ -23,6 +24,29 @@ function GetDataFromNest(DBCon) {
                 InsertDBData(DBCon, out, 'thermostats');
             } else {
                 console.error('Parse error on JSON extraction');
+            }
+        });
+    }).on('error', function(error) {
+        console.error('ERROR: \n' + error);
+    });
+}
+
+function GetWeatherData(DBCon) {
+    http.get('http://api.wunderground.com/api/' + weather_key + 
+             '/geolookup/conditions/q/Canada/Saskatoon.json', function(res) {
+        if (res.statusCode != '200') {
+            console.error('[' + new Date() + '] Error retrieving weather!: ' +
+                          'Code: ' + res.statusCode);
+            return;
+        }
+        res.on('data', function(data) {
+            if (validator.isJSON(data)) {
+                var out = ExtractJSON(data,'weather');
+                if (out) {
+                    InsertDBData(DBCon, out, 'weather');
+                } else {
+                    console.error('Parse error on JSON extraction');
+                }
             }
         });
     }).on('error', function(error) {
@@ -137,27 +161,6 @@ function InsertDBData(conn,input,device_type) {
     } else {
         return;
     }
-}
-
-function GetWeatherData(DBCon) {
-    http.get('http://api.wunderground.com/api/' + weather_key + '/geolookup/conditions/q/Canada/Saskatoon.json', function(res) {
-        if (res.statusCode != '200') {
-            console.error('Error retrieving weather!: Code: ' + res.statusCode);
-            return;
-        }
-        res.on('data', function(data) {
-            if (validator.isJSON(data)) {
-                var out = ExtractJSON(data,'weather');
-                if (out) {
-                    InsertDBData(DBCon, out, 'weather');
-                } else {
-                    console.error('Parse error on JSON extraction');
-                }
-            }
-        });
-    }).on('error', function(error) {
-        console.error('ERROR: \n' + error);
-    });
 }
 
 function doError(err) {
