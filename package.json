@@ -1,7 +1,14 @@
 {
   "name": "NestSite",
+  "description": "A simple site for retrieving and displaying Nest data"
+  "author": "Kevin Benard"
   "version": "0.1.0",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/kevinbenard/NestSite.git"
+  },
   "private": true,
+  "license": "MIT",
   "scripts": {
     "start": "node ./bin/www"
   },
@@ -13,6 +20,9 @@
     "morgan": "~1.3.0",
     "serve-favicon": "~2.1.3",
     "debug": "~2.0.0",
-    "jade": "~1.6.0"
+    "jade": "~1.6.0",
+    "follow-redirects": "0.0.3",
+    "pg": "^4.1.0",
+    "validator": "^3.27.0"
   }
 }
