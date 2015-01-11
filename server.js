@@ -14,7 +14,7 @@ var timeInterval = 900000; // 15 mins in milliseconds
 function GetDataFromNest(DBCon) {
     https.get('https://developer-api.nest.com/?auth=' + nest_auth, function(res) {
         if (res.statusCode != '200') {
-            console.error('[' + new Date() + '] Error retrieving data!: Code: ' + 
+            console.error('[' + new Date() + '] Error retrieving Nest data!: Code: ' + 
                           res.statusCode);
             return;
         }
@@ -23,11 +23,11 @@ function GetDataFromNest(DBCon) {
             if (out) {
                 InsertDBData(DBCon, out, 'thermostats');
             } else {
-                console.error('Parse error on JSON extraction');
+                console.error('Parse error on Nest JSON extraction');
             }
         });
     }).on('error', function(error) {
-        console.error('ERROR: \n' + error);
+        console.error('Nest GET request ERROR: \n' + error);
     });
 }
 
@@ -50,7 +50,7 @@ function GetWeatherData(DBCon) {
             }
         });
     }).on('error', function(error) {
-        console.error('ERROR: \n' + error);
+        console.error('Weather GET request ERROR: \n' + error);
     });
 }
 
@@ -71,7 +71,7 @@ function ExtractJSON(input,input_type) {
         } else if (input_type === 'weather') {
             out = data.current_observation;
         } else {
-            console.error('Error! Incorrect device type!');
+            console.error('Error extracting JSON! Incorrect input type!');
         }
     }
 
@@ -83,7 +83,7 @@ function InsertDBData(conn,input,device_type) {
     // TODO: Refactor query code to better handle errors
 
     if (!conn || !input) { 
-        console.error('DATABASE CONNECTION LOST\n'); 
+        console.error('DATABASE CONNECTION LOST! Type: ' + device_type); 
         return; 
     }
     if (device_type === 'thermostats') {
@@ -96,7 +96,7 @@ function InsertDBData(conn,input,device_type) {
                    'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
         function(err, result) { 
             if(err) {
-                doError(err);
+                doError(err, 'Error inserting raw nest JSON!');
             }
         });
         conn.query('INSERT INTO nest_thermo_data (device_id, structure_id, ' +
@@ -123,7 +123,7 @@ function InsertDBData(conn,input,device_type) {
          input.ambient_temperature_c,input.humidity, curr_time ], 
          function(err, result) {
              if(err) {
-                 doError(err);
+                 doError(err, 'Error inserting parsed nest data!');
              }
          });
     } else if (device_type === 'weather') {
@@ -142,7 +142,7 @@ function InsertDBData(conn,input,device_type) {
                    'VALUES ($1,$2)', [JSON.stringify(input), curr_time], 
         function(err, result) {
             if (err) {
-                doError(err);
+                doError(err, 'Error inserting raw weather JSON!');
             }
         });
         conn.query('INSERT INTO weather_thermo_data (curr_time,weather,' +
@@ -155,7 +155,7 @@ function InsertDBData(conn,input,device_type) {
             dewpoint_c,dewpoint_f,windchill_f,
             windchill_c,input.precip_today_metric], function(err,result) {
                 if(err) {
-                    doError(err);
+                    doError(err, 'Error inserting parsed weather data!');
                 }
             });
     } else {
@@ -163,7 +163,10 @@ function InsertDBData(conn,input,device_type) {
     }
 }
 
-function doError(err) {
+function doError(err, msg) {
+    if (msg) {
+        console.log('[' + new Date() + '] ' + msg);
+    }
     console.error('[' + new Date() + '] ERROR: ' + JSON.stringify(err));
 }
 
